@@ -173,7 +173,7 @@ M.core_user.init_user_selector = function(Y, name, hash, extrafields, lastsearch
             var iotrans = Y.io(M.cfg.wwwroot + '/user/selector/search.php', {
                 method: 'POST',
                 data: 'selectorid=' + hash + '&sesskey=' + M.cfg.sesskey +
-                    '&search=' + value + '&userselector_searchtype=' + this.searchtype,
+                    '&search=' + encodeURIComponent(value) + '&userselector_searchtype=' + this.searchtype,
                 on: {
                     complete: this.handle_response
                 },
