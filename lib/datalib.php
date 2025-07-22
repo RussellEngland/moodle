@@ -767,7 +767,7 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
             $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
 
         } else {
-            $searchcond[] = $DB->sql_like($concat,":ss$i", false, true, $NOT);
+            $searchcond[] = $DB->sql_like($concat,":ss$i", false, false, $NOT);
             $params['ss'.$i] = "%$searchterm%";
         }
     }
