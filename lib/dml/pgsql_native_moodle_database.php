@@ -58,6 +58,9 @@ class pgsql_native_moodle_database extends moodle_database {
     /** @var array $dbhcursor keep track of open cursors */
     private $dbhcursor = [];
 
+    /** @var bool $unaccentfunctionsupported */
+    private $unaccentfunctionsupported = null;
+
     /** @var resource|PgSql\Connection|null $pgsql database resource */
     protected $pgsql     = null;
 
@@ -1479,11 +1482,16 @@ class pgsql_native_moodle_database extends moodle_database {
 
         // postgresql does not support accent insensitive text comparisons, sorry
         if ($casesensitive) {
-            $LIKE = $notlike ? 'NOT LIKE' : 'LIKE';
+            $like = $notlike ? 'NOT LIKE' : 'LIKE';
         } else {
-            $LIKE = $notlike ? 'NOT ILIKE' : 'ILIKE';
+            $like = $notlike ? 'NOT ILIKE' : 'ILIKE';
         }
-        return "$fieldname $LIKE $param ESCAPE '$escapechar'";
+
+        if (!$accentsensitive && $this->is_unaccent_function_supported()) {
+            return "unaccent($fieldname) $like unaccent($param) ESCAPE '$escapechar'";
+        }
+
+        return "$fieldname $like $param ESCAPE '$escapechar'";
     }
 
     public function sql_bitxor($int1, $int2) {
@@ -1730,5 +1738,43 @@ class pgsql_native_moodle_database extends moodle_database {
      */
     public function is_count_window_function_supported(): bool {
         return true;
+    }
+
+    /**
+     * Checks if the unaccent function exists - used for accent insensitive search.
+     *
+     * The Routines view is available from Postgresql 13 onwards
+     * - https://www.postgresql.org/docs/current/infoschema-routines.html
+     * The unaccent function is a contrib function available from Postgresql 13 onwards
+     * - https://www.postgresql.org/docs/13/unaccent.html
+     * Moodle 4.5 requires Postgresql 13
+     *
+     * To install
+     * 1. Ubuntu/Debian : sudo apt install postgresql-contrib
+     * 2. psql : CREATE EXTENSION unaccent;
+     *
+     * @return bool
+     */
+    private function is_unaccent_function_supported(): bool {
+        if ($this->unaccentfunctionsupported !== null) {
+            return $this->unaccentfunctionsupported;
+        }
+
+        $params = [
+            'specificcatalog' => $this->dbname,
+            'routinetype' => 'FUNCTION',
+            'routinename' => 'unaccent',
+        ];
+
+        // Note : table name without prefix.
+        $sql = "SELECT r.specific_name
+                FROM information_schema.routines r
+                WHERE r.specific_catalog = :specificcatalog
+                AND r.routine_type = :routinetype
+                AND r.routine_name = :routinename";
+
+        $this->unaccentfunctionsupported = $this->record_exists_sql($sql, $params);
+
+        return $this->unaccentfunctionsupported;
     }
 }
