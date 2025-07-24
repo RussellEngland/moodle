@@ -1482,16 +1482,16 @@ class pgsql_native_moodle_database extends moodle_database {
 
         // postgresql does not support accent insensitive text comparisons, sorry
         if ($casesensitive) {
-            $LIKE = $notlike ? 'NOT LIKE' : 'LIKE';
+            $like = $notlike ? 'NOT LIKE' : 'LIKE';
         } else {
-            $LIKE = $notlike ? 'NOT ILIKE' : 'ILIKE';
+            $like = $notlike ? 'NOT ILIKE' : 'ILIKE';
         }
 
         if (!$accentsensitive && $this->is_unaccent_function_supported()) {
-            return "unaccent($fieldname) $LIKE unaccent($param) ESCAPE '$escapechar'";
+            return "unaccent($fieldname) $like unaccent($param) ESCAPE '$escapechar'";
         }
 
-        return "$fieldname $LIKE $param ESCAPE '$escapechar'";
+        return "$fieldname $like $param ESCAPE '$escapechar'";
     }
 
     public function sql_bitxor($int1, $int2) {
@@ -1776,7 +1776,5 @@ class pgsql_native_moodle_database extends moodle_database {
         $this->unaccentfunctionsupported = $this->record_exists_sql($sql, $params);
 
         return $this->unaccentfunctionsupported;
-
     }
-
 }
