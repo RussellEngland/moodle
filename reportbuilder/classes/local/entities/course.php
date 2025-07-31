@@ -230,6 +230,8 @@ class course extends base {
             'coursefullnamewithlink' => 'fullname',
             'courseshortnamewithlink' => 'shortname',
             'courseidnumberewithlink' => 'idnumber',
+            'courseurlwithlink' => 'fullname',
+            'courseurl' => 'fullname',
         ];
         foreach ($fields as $key => $field) {
             $column = (new column(
@@ -240,17 +242,40 @@ class course extends base {
                 ->add_joins($this->get_joins())
                 ->set_type(column::TYPE_TEXT)
                 ->add_fields("{$tablealias}.{$field} as $key, {$tablealias}.id")
-                ->set_is_sortable(true)
-                ->add_callback(static function(?string $value, stdClass $row): string {
-                    if ($value === null) {
-                        return '';
-                    }
+                ->set_is_sortable(true);
 
-                    context_helper::preload_from_record($row);
+            switch ($key) {
+                case 'courseurl':
+                    $column->set_callback(static function (?string $value, stdClass $row): string {
+                        $courseurl = course_get_url($row->id);
 
-                    return html_writer::link(course_get_url($row->id),
-                        format_string($value, true, ['context' => context_course::instance($row->id)]));
-                });
+                        return $courseurl->out();
+                    });
+                    break;
+
+                case 'courseurlwithlink':
+                    $column->set_callback(static function (?string $value, stdClass $row): string {
+                        $courseurl = course_get_url($row->id);
+
+                        return html_writer::link($courseurl, $courseurl);
+                    });
+                    break;
+
+                default:
+                    $column->add_callback(static function (?string $value, stdClass $row): string {
+                        if ($value === null) {
+                            return '';
+                        }
+
+                        context_helper::preload_from_record($row);
+
+                        return html_writer::link(
+                            course_get_url($row->id),
+                            format_string($value, true, ['context' => context_course::instance($row->id)])
+                        );
+                    });
+                    break;
+            }
 
             // Join on the context table so that we can use it for formatting these columns later.
             if ($key === 'coursefullnamewithlink') {
