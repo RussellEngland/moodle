@@ -81,6 +81,7 @@ $string['coursefullnamewithlink'] = 'Course full name with link';
 $string['courseidnumberewithlink'] = 'Course ID number with link';
 $string['courseshortnamewithlink'] = 'Course short name with link';
 $string['courseselect'] = 'Select course';
+$string['courseurl'] = 'Course URL';
 $string['customfieldcolumn'] = '{$a}';
 $string['customreport'] = 'Custom report';
 $string['customreports'] = 'Custom reports';

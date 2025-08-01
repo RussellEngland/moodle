@@ -240,6 +240,27 @@ class course extends base {
                 });
         }
 
+        $columns[] = (new column(
+            'courseurl',
+            new lang_string('courseurl', 'core_reportbuilder'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->add_join($this->get_context_join())
+            ->set_type(column::TYPE_TEXT)
+            ->add_field("{$tablealias}.{$field}")
+            ->add_fields(context_helper::get_preload_record_columns_sql($contexttablealias))
+            ->set_is_sortable(true)
+            ->add_callback(static function (?string $value, stdClass $context): string {
+                if ($context->ctxinstance === null) {
+                    return '';
+                }
+
+                $courseurl = course_get_url($context->ctxinstance);
+
+                return $courseurl->out();
+            });
+
         foreach ($coursefields as $coursefield => $coursefieldlang) {
             $columntype = $this->get_course_field_type($coursefield);
 
