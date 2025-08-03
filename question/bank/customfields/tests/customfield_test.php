@@ -311,4 +311,59 @@ final class customfield_test extends \advanced_testcase {
         $this->assertEquals('a', $newquestion2cfdata->f4);
         $this->assertEquals('test text', $newquestion2cfdata->f5);
     }
+
+    /**
+     * Tests the move question function.
+     *
+     * @covers ::question_move_questions_to_category
+     */
+    public function test_move_question(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $this->setup_custom_fields();
+        $this->setup_questions();
+
+        // Create question.
+        $question = $this->qgen->create_question('shortanswer', null, $this->question1data);
+
+        // Explicitly save the custom field data for the questions, like a form would.
+        $customfieldhandler = \qbank_customfields\customfield\question_handler::create();
+        $this->question1data['id'] = $question->id;
+        $customfieldhandler->instance_form_save((object)$this->question1data);
+
+        // Get the current contextid.
+        $oldcontextid = $customfieldhandler->get_instance_context($question->id)->id;
+
+        // Get the custom field data.
+        $customfields = $customfieldhandler->get_instance_data($question->id);
+
+        // Confirm the custom field context is the same as the question.
+        foreach ($customfields as $customfield) {
+            if (!empty($customfield->get_value())) {
+                // There's some data so check the context.
+                $this->assertEquals($oldcontextid, $customfield->get_context()->id);
+            }
+        }
+
+        // Create a new question category.
+        $catgenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $newcat = $catgenerator->create_question_category();
+
+        // Move the question.
+        question_move_questions_to_category([$question->id], $newcat->id);
+
+        // Get the new contextid.
+        $newcontextid = $customfieldhandler->get_instance_context($question->id)->id;
+
+        // Get the custom field data again.
+        $customfields = $customfieldhandler->get_instance_data($question->id);
+
+        // Confirm the custom field context is the same as the new question category.
+        foreach ($customfields as $customfield) {
+            if (!empty($customfield->get_value())) {
+                // There's some data so check the context.
+                $this->assertEquals($newcontextid, $customfield->get_context()->id);
+            }
+        }
+    }
 }
