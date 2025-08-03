@@ -760,6 +760,13 @@ function question_move_questions_to_category($questionids, $newcategoryid): bool
     // Purge these questions from the cache.
     foreach ($questions as $question) {
         question_bank::notify_question_edited($question->id);
+
+        // Dispatch the hook.
+        $hook = new \core_question\hook\after_question_moved_category(
+            question: $question,
+            newcategory: $newcategorydata,
+        );
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
     }
 
     return true;

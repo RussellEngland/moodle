@@ -15,17 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for qbank_customfields.
+ * Hook listener callbacks.
  *
- * @package     qbank_customfields
- * @copyright   2021 Catalyst IT Australia Pty Ltd
- * @author      Matt Porritt <mattp@catalyst-au.net>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    qbank_customfields
+ * @copyright  2025 Russell England <russellengland@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'qbank_customfields';
-$plugin->version   = 2024100701;
-$plugin->requires  = 2024100100;
-$plugin->maturity  = MATURITY_STABLE;
+$callbacks = [
+    [
+        'hook' => \core_question\hook\after_question_moved_category::class,
+        'callback' => \qbank_customfields\hook_listener::class . '::update_customfield_context',
+    ],
+
+];
