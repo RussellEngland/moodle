@@ -328,4 +328,20 @@ class question_handler extends \core_customfield\handler {
             }
         }
     }
+
+    /**
+     * Updates context if question is moved to another category.
+     *
+     * @param int $questionid - the questionid
+     */
+    public function move_question(int $questionid) {
+        // Get the new context after the question has moved.
+        $newcontextid = $this->get_instance_context($questionid)->id;
+
+        $fielddata = api::get_instance_fields_data($this->get_fields(), $questionid, false);
+        foreach ($fielddata as $data) {
+            $data->set('contextid', $newcontextid);
+            $data->save();
+        }
+    }
 }
