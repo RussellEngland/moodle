@@ -724,8 +724,8 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
     global $CFG, $DB;
 
     if ($DB->sql_regex_supported()) {
-        $REGEXP    = $DB->sql_regex(true);
-        $NOTREGEXP = $DB->sql_regex(false);
+        $regexp    = $DB->sql_regex(true);
+        $notregexp = $DB->sql_regex(false);
     }
 
     $i = 0;
@@ -740,14 +740,14 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
     foreach ($searchterms as $searchterm) {
         $i++;
 
-        $NOT = false; /// Initially we aren't going to perform NOT LIKE searches, only MSSQL and Oracle
+        $not = false; // Initially we aren't going to perform NOT LIKE searches, only MSSQL and Oracle.
                    /// will use it to simulate the "-" operator with LIKE clause
 
     /// Under Oracle and MSSQL, trim the + and - operators and perform
     /// simpler LIKE (or NOT LIKE) queries
         if (!$DB->sql_regex_supported()) {
             if (substr($searchterm, 0, 1) == '-') {
-                $NOT = true;
+                $not = true;
             }
             $searchterm = trim($searchterm, '+-');
         }
@@ -757,17 +757,17 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
         if (substr($searchterm,0,1) == '+') {
             $searchterm = trim($searchterm, '+-');
             $searchterm = preg_quote($searchterm, '|');
-            $searchcond[] = "$concat $REGEXP :ss$i";
+            $searchcond[] = "$concat $regexp :ss$i";
             $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
 
         } else if ((substr($searchterm,0,1) == "-") && (core_text::strlen($searchterm) > 1)) {
             $searchterm = trim($searchterm, '+-');
             $searchterm = preg_quote($searchterm, '|');
-            $searchcond[] = "$concat $NOTREGEXP :ss$i";
+            $searchcond[] = "$concat $notregexp :ss$i";
             $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
 
         } else {
-            $searchcond[] = $DB->sql_like($concat,":ss$i", false, true, $NOT);
+            $searchcond[] = $DB->sql_like($concat, ":ss$i", false, false, $not);
             $params['ss'.$i] = "%$searchterm%";
         }
     }
